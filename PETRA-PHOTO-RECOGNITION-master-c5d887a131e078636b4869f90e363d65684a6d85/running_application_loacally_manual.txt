@@ -1,0 +1,31 @@
+# 1. Start app on heroku local
+# create file Procfile.local with content: 
+# web: java -Dspring.profiles.active=heroku -jar einstein/target/einstein-0.0.1-SNAPSHOT.jar
+# worker: java -Dspring.profiles.active=heroku -jar  worker/target/worker-0.0.1-SNAPSHOT.jar
+
+# 2. Create file .env with local config vars:
+# JDBC_DATABASE_URL=jdbc:postgresql://localhost:5432/salesforce?user=postgres&password=password
+# PORT=8080
+# EINSTEIN_VISION_MODEL_ID=KR6OWJ25ER474O23M2UJHLT53Y
+# EINSTEIN_TOKEN_EXPIRATION_TIME_IN_SEC=360
+# AZURE_STORAGE_CONNECTION_STRING=
+# AZURE_CONTAINER_NAME=
+
+# 3. dump db to local postgresql
+heroku pg:backups:capture
+heroku pg:backups:url b001
+# download backup file
+# create db salesforce on local postgresql
+pg_restore --verbose --no-acl --no-owner  -h localhost -p 5432 -d salesforce < backupFileName
+
+# 4. run:
+heroku local -f Procfile.local
+
+# 5. run psql 
+psql -h localhost -p 5432 -U postgres salesforce
+
+
+# useful query
+set search_path=salesforce, public;
+select id,filename__c, status__c, result__c, resultcode__c, resultdetails__c, type__c  from ppr_imagerecognitionprocess__c;
+update ppr_imagerecognitionprocess__c set status__c = 'NEW', result__c = '', resultcode__c ='', resultdetails__c = '' where id = ;
